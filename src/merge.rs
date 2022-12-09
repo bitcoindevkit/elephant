@@ -14,8 +14,10 @@ pub enum Msg {
     BroadcastFinished(Result<(), String>),
 }
 
-#[derive(Default, Properties, PartialEq)]
-pub struct Props {}
+#[derive(Properties, PartialEq)]
+pub struct Props {
+    pub wallet: AppWallet,
+}
 
 pub struct Merge {
     psbts: Vec<(Option<Result<PartiallySignedTransaction, String>>, usize)>,
@@ -30,17 +32,12 @@ impl Component for Merge {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(_ctx: &Context<Self>) -> Self {
-        let wallet = AppWallet::new(
-            "tr(cVd1Ew5616o4FQaXDpq2LcdqGUgMVpbVa2MkqqmWibsQ8g4pH4qc)",
-            None,
-            bitcoin::Network::Regtest,
-        )
-        .unwrap();
+    fn create(ctx: &Context<Self>) -> Self {
+        let props = ctx.props();
         Self {
             psbts: vec![(None, 0)],
             merged_psbt: None,
-            wallet,
+            wallet: props.wallet.clone(),
             key_n: 0,
             is_broadcasting: false,
             broadcast_result: None,
@@ -172,14 +169,13 @@ impl Component for Merge {
             Msg::BroadcastTriggered => {
                 log::info!("Broadcast");
                 self.is_broadcasting = true;
+                let mut merged_psbt = self.merged_psbt.clone().unwrap().unwrap();
                 let tx = self
-                    .merged_psbt
-                    .as_ref()
-                    .unwrap()
-                    .as_ref()
-                    .unwrap()
-                    .clone()
-                    .extract_tx();
+                    .wallet
+                    .borrow()
+                    .0
+                    .finalize_psbt(&mut merged_psbt, SignOptions::default());
+                let tx = merged_psbt.extract_tx();
                 let wallet_cloned = self.wallet.0.clone();
                 ctx.link().send_future(async move {
                     let res = wallet_cloned.borrow().1.broadcast(&tx).await;

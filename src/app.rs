@@ -32,11 +32,13 @@ enum Tabs {
 
 fn parse_policy(policy: &str) -> Result<AppWallet, Box<dyn std::error::Error>> {
     let policy = Concrete::<String>::from_str(policy)?;
-    let policy: bdk::miniscript::Miniscript<String, bdk::miniscript::Tap> =
-        policy.compile()?;
+    let policy: bdk::miniscript::Miniscript<String, bdk::miniscript::Tap> = policy.compile()?;
 
     Ok(AppWallet::new(
-        &format!("tr(89de7c56ecdf6c400295a57a203d87a53ed28f74735d2373a3e034781338f259,{})", policy),
+        &format!(
+            "tr(89de7c56ecdf6c400295a57a203d87a53ed28f74735d2373a3e034781338f259,{})",
+            policy
+        ),
         None,
         bitcoin::Network::Regtest,
     )?)
@@ -52,8 +54,12 @@ impl App {
             Tabs::CreateTx => {
                 html! { < crate::tab_create_tx::TabCreateTx wallet={self.wallet.as_ref().unwrap().clone()} /> }
             }
-            Tabs::SignTx => html! { < crate::sign::Sign wallet={self.wallet.as_ref().unwrap().clone()} /> },
-            Tabs::Merge => html! { < crate::merge::Merge /> },
+            Tabs::SignTx => {
+                html! { < crate::sign::Sign wallet={self.wallet.as_ref().unwrap().clone()} /> }
+            }
+            Tabs::Merge => {
+                html! { < crate::merge::Merge wallet={self.wallet.as_ref().unwrap().clone()} /> }
+            }
         }
     }
 }
