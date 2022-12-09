@@ -45,10 +45,13 @@ fn parse_policy(policy: &str) -> Result<AppWallet, Box<dyn std::error::Error>> {
 impl App {
     fn create_tab(&self) -> Html {
         match self.current_tab {
-            Tabs::Home => html! { < crate::home::Home /> },
+            Tabs::Home => {
+                html! { < crate::home::Home wallet={self.wallet.as_ref().unwrap().clone()} /> }
+            }
             Tabs::KeyManagement => html! {< crate::keymanager::Keymanager />},
-            Tabs::CreateTx => html! { { "TODO" } },
-            //Route::CreateTx => html! { < crate::tab_create_tx::TabCreateTx /> },
+            Tabs::CreateTx => {
+                html! { < crate::tab_create_tx::TabCreateTx wallet={self.wallet.as_ref().unwrap().clone()} /> }
+            }
             Tabs::SignTx => html! { < crate::sign::Sign /> },
             Tabs::Merge => html! { < crate::merge::Merge /> },
         }

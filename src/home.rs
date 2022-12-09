@@ -10,8 +10,10 @@ pub enum Msg {
     ReloadFinished(Result<(), bdk::Error>),
 }
 
-#[derive(Default, Properties, PartialEq)]
-pub struct Props {}
+#[derive(Properties, PartialEq)]
+pub struct Props {
+    pub wallet: AppWallet,
+}
 
 pub struct Home {
     wallet: AppWallet,
@@ -27,21 +29,17 @@ impl Component for Home {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(_ctx: &Context<Self>) -> Self {
-        let wallet = AppWallet::new(
-            "tr(cVd1Ew5616o4FQaXDpq2LcdqGUgMVpbVa2MkqqmWibsQ8g4pH4qc)",
-            None,
-            bitcoin::Network::Testnet,
-        )
-        .unwrap();
-        let address = wallet
+    fn create(ctx: &Context<Self>) -> Self {
+        let props = ctx.props();
+        let address = props
+            .wallet
             .borrow()
             .0
             .get_address(AddressIndex::New)
             .unwrap()
             .to_string();
         Self {
-            wallet,
+            wallet: props.wallet.clone(),
             balance: Balance::default(),
             address,
             transactions: vec![],
