@@ -11,23 +11,21 @@ use crate::evt::EventBus;
 pub struct App {
     wallet: Option<AppWallet>,
     _recv: Box<dyn Bridge<EventBus>>,
+    current_tab: Tabs,
 }
 
 pub enum Msg {
+    Reload,
+    TabChange(Tabs),
     Descriptor(String),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Routable)]
-enum Route {
-    #[at("/")]
+#[derive(Copy, Clone)]
+enum Tabs {
     Home,
-    #[at("/keys")]
     KeyManagement,
-    #[at("/create_tx")]
     CreateTx,
-    #[at("/sign_tx")]
     SignTx,
-    #[at("/merge")]
     Merge,
 }
 
@@ -43,6 +41,19 @@ fn parse_policy(policy: &str) -> Result<AppWallet, Box<dyn std::error::Error>> {
     )?)
 }
 
+impl App {
+fn create_tab(&self) -> Html {
+    match self.current_tab {
+        Tabs::Home => html! { < crate::home::Home /> },
+        Tabs::KeyManagement => html! {< crate::keymanager::Keymanager />},
+        Tabs::CreateTx => html! { { "TODO" } },
+        //Route::CreateTx => html! { < crate::tab_create_tx::TabCreateTx /> },
+        Tabs::SignTx => html! { < crate::sign::Sign /> },
+        Tabs::Merge => html! { < crate::merge::Merge /> },
+    }
+}
+}
+
 impl Component for App {
     type Message = Msg;
     type Properties = ();
@@ -51,6 +62,7 @@ impl Component for App {
         App {
             wallet: None,
             _recv: EventBus::bridge(ctx.link().callback(Msg::Descriptor)),
+            current_tab: Tabs::KeyManagement,
         }
     }
 
@@ -69,6 +81,11 @@ impl Component for App {
 
                 true
             }
+            Msg::TabChange(t) => {
+                self.current_tab = t;
+                true
+            }
+            _ => false,
         }
     }
 
@@ -78,6 +95,7 @@ impl Component for App {
             None => Some("disabled"),
         };
         let link = ctx.link().clone();
+        let onclick = move |t: Tabs| ctx.link().callback(move |_| Msg::TabChange(t));
 
         html! {
             <div>
@@ -88,27 +106,15 @@ impl Component for App {
                         </a>
                         <ul class="nav nav-pills">
                         // TODO: active tab?
-                            <li class="nav-item"><a href="/keys" class="nav-link" aria-current="page">{ "Key Manager" }</a></li>
-                            <li class="nav-item"><a href="/" class={classes!("nav-link", disabled_link)}>{ "Wallet home" }</a></li>
-                            <li class="nav-item"><a href="/create_tx" class={classes!("nav-link", disabled_link)}>{ "Create transaction" }</a></li>
-                            <li class="nav-item"><a href="/sign_tx" class={classes!("nav-link", disabled_link)}>{ "Sign transaction" }</a></li>
-                            <li class="nav-item"><a href="/merge" class="nav-link">{ "Merge and broadcast" }</a></li>
+                            <li class="nav-item"><a onclick={onclick(Tabs::KeyManagement)} class="nav-link" aria-current="page">{ "Key Manager" }</a></li>
+                            <li class="nav-item"><a onclick={onclick(Tabs::Home)} class={classes!("nav-link", disabled_link)}>{ "Wallet home" }</a></li>
+                            <li class="nav-item"><a onclick={onclick(Tabs::CreateTx)} class={classes!("nav-link", disabled_link)}>{ "Create transaction" }</a></li>
+                            <li class="nav-item"><a onclick={onclick(Tabs::SignTx)} class={classes!("nav-link", disabled_link)}>{ "Sign transaction" }</a></li>
+                            <li class="nav-item"><a onclick={onclick(Tabs::Merge)} class="nav-link">{ "Merge and broadcast" }</a></li>
                         </ul>
                     </header>
                 </div>
-                <BrowserRouter>
-                    <Switch<Route> render={Switch::render(move |routes| {
-                        match routes {
-                            Route::Home => html! { < crate::home::Home /> },
-                            Route::KeyManagement => html! {
-                                < crate::keymanager::Keymanager />
-                            },
-                            Route::CreateTx => html! { { "TODO" } },
-                            Route::SignTx => html! { < crate::sign::Sign /> },
-                            Route::Merge => html! { < crate::merge::Merge /> },
-                        }
-                    })} />
-                </BrowserRouter>
+                { self.create_tab() }
             </div>
         }
     }
