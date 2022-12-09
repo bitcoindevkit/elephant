@@ -1,6 +1,5 @@
 use crate::AppWallet;
 use bdk::bitcoin::util::psbt::PartiallySignedTransaction;
-use bdk::bitcoin::*;
 use bdk::*;
 use std::str::FromStr;
 use web_sys::HtmlInputElement;
@@ -23,6 +22,7 @@ pub struct Merge {
     merged_psbt: Option<Result<PartiallySignedTransaction, String>>,
     wallet: AppWallet,
     is_broadcasting: bool,
+    broadcast_result: Option<Result<(), String>>,
     key_n: usize,
 }
 
@@ -43,6 +43,7 @@ impl Component for Merge {
             wallet,
             key_n: 0,
             is_broadcasting: false,
+            broadcast_result: None,
         }
     }
 
@@ -60,6 +61,13 @@ impl Component for Merge {
         let broadcast_disabled =
             self.merged_psbt.is_none() || merge_error != "" || self.is_broadcasting;
         let is_invalid = if merge_error != "" { "is-invalid" } else { "" };
+
+        let broadcast_result_msg = match &self.broadcast_result {
+            Some(Ok(())) => format!("Broadcast is successful! Yayyyy!"),
+            Some(Err(err)) => format!("You failed! Error: {}", err.to_string()),
+            None => format!(""),
+        };
+
         html! {
             <div class="daniela">
                 <label for="accordionExample" class="form-label">{"Paste here the PSBTs to merge:"}</label>
@@ -115,6 +123,9 @@ impl Component for Merge {
                 { format!("Error merging PSBTs: {}", merge_error) }
                 </div>
                 <button class="btn btn-primary daniela-button" onclick={broadcast} disabled={ broadcast_disabled }>{ if self.is_broadcasting { "Broadcasting..." } else { "Broadcast" } }</button>
+                <div>
+                    <label> { broadcast_result_msg } </label>
+                </div>
             </div>
         }
     }
@@ -178,6 +189,7 @@ impl Component for Merge {
             }
             Msg::BroadcastFinished(res) => {
                 self.is_broadcasting = false;
+                self.broadcast_result = Some(res);
                 true
             }
         }
