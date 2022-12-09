@@ -1,5 +1,5 @@
-use wasm_bindgen::{JsValue, prelude::*};
 use serde::Serialize;
+use wasm_bindgen::{prelude::*, JsValue};
 
 #[wasm_bindgen]
 extern "C" {
@@ -40,7 +40,11 @@ pub fn restore_blocks() {
     restoreBlocks();
 }
 
-pub fn init_js(workspace: &Workspace, compiled_cb: &Closure<dyn FnMut(String)>, dropdown_cb: &Closure<dyn FnMut() -> JsValue>) {
+pub fn init_js(
+    workspace: &Workspace,
+    compiled_cb: &Closure<dyn FnMut(String)>,
+    dropdown_cb: &Closure<dyn FnMut() -> JsValue>,
+) {
     initJs(&workspace.0, compiled_cb.as_ref(), dropdown_cb.as_ref());
 }
 pub fn insert_begin(workspace: &Workspace) {
@@ -62,12 +66,16 @@ pub struct BlocklyToolboxCategory {
 }
 
 impl BlocklyToolboxCategory {
-    pub fn new(name: &'static str, colour: u16, blocks: impl Iterator<Item = &'static str>) -> Self {
+    pub fn new(
+        name: &'static str,
+        colour: u16,
+        blocks: impl Iterator<Item = &'static str>,
+    ) -> Self {
         BlocklyToolboxCategory {
             kind: "category",
             name,
             colour,
-            contents: blocks.into_iter().map(BlocklyToolboxBlock::new).collect()
+            contents: blocks.into_iter().map(BlocklyToolboxBlock::new).collect(),
         }
     }
 }
@@ -112,22 +120,34 @@ pub struct BlocklyBlockArg {
 impl BlocklyBlockArg {
     pub fn input_statement(name: &'static str, check: ValueType) -> Self {
         BlocklyBlockArg {
-            name: Some(name), check: Some(check), ty: "input_statement", value: None
+            name: Some(name),
+            check: Some(check),
+            ty: "input_statement",
+            value: None,
         }
     }
     pub fn input_value(name: &'static str, check: ValueType) -> Self {
         BlocklyBlockArg {
-            name: Some(name), check: Some(check), ty: "input_value", value: None
+            name: Some(name),
+            check: Some(check),
+            ty: "input_value",
+            value: None,
         }
     }
     pub fn dummy() -> Self {
         BlocklyBlockArg {
-            name: None, check: None, ty: "input_dummy", value: None
+            name: None,
+            check: None,
+            ty: "input_dummy",
+            value: None,
         }
     }
     pub fn field_number(name: &'static str, value: &'static str) -> Self {
         BlocklyBlockArg {
-            name: Some(name), check: None, ty: "field_number", value: Some(value)
+            name: Some(name),
+            check: None,
+            ty: "field_number",
+            value: Some(value),
         }
     }
 }
@@ -147,5 +167,5 @@ pub struct BlocklyBlock {
     pub previous_statement: Option<ValueType>,
     pub tooltip: Option<&'static str>,
     pub colour: u16,
-    pub extensions: Vec<&'static str>
+    pub extensions: Vec<&'static str>,
 }

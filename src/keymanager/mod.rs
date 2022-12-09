@@ -1,14 +1,14 @@
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::cell::RefCell;
 use std::str::FromStr;
 
-use yew::prelude::*;
+use bdk::bitcoin::secp256k1::{rand, SecretKey};
+use bdk::bitcoin::{Network, PrivateKey, PublicKey};
+use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 use web_sys::{EventTarget, HtmlInputElement};
-use serde::{Serialize, Deserialize};
-use bdk::bitcoin::{PrivateKey, Network, PublicKey};
-use bdk::bitcoin::secp256k1::{rand, SecretKey};
+use yew::prelude::*;
 
 mod blockly;
 mod storage;
@@ -36,8 +36,8 @@ pub struct Keymanager {
 
     state: Rc<RefCell<State>>,
 
-    compiled_cb: Closure::<dyn FnMut(String)>,
-    dropdown_cb: Closure::<dyn FnMut() -> JsValue>,
+    compiled_cb: Closure<dyn FnMut(String)>,
+    dropdown_cb: Closure<dyn FnMut() -> JsValue>,
 }
 
 impl Keymanager {
@@ -65,11 +65,16 @@ impl State {
             inner: SecretKey::new(&mut rand::thread_rng()),
         };
 
-        let map = vec![("example_key".into(), PublicKey::from_str("038375785e012a64dbf86fb4cfe6b9c71e2d4677fddf7a15ceed7de5d36e23ec1a").unwrap())].into_iter().collect();
-        State {
-            local_key,
-            map,
-        }
+        let map = vec![(
+            "example_key".into(),
+            PublicKey::from_str(
+                "038375785e012a64dbf86fb4cfe6b9c71e2d4677fddf7a15ceed7de5d36e23ec1a",
+            )
+            .unwrap(),
+        )]
+        .into_iter()
+        .collect();
+        State { local_key, map }
     }
 }
 
@@ -86,8 +91,12 @@ impl Component for Keymanager {
         let state = Rc::new(RefCell::new(State::new()));
         let state_cloned = Rc::clone(&state);
         let dropdown_cb = Closure::new(move || {
-            let state_cloned = state_cloned.borrow(); 
-            let dropdown = state_cloned.map.iter().map(|(k, v)| (k, v.to_string())).collect::<Vec<_>>();
+            let state_cloned = state_cloned.borrow();
+            let dropdown = state_cloned
+                .map
+                .iter()
+                .map(|(k, v)| (k, v.to_string()))
+                .collect::<Vec<_>>();
             log::debug!("{:?}", dropdown);
             serde_wasm_bindgen::to_value(&dropdown).unwrap()
         });
@@ -105,8 +114,12 @@ impl Component for Keymanager {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let oninput_name = ctx.link().callback(move |e: InputEvent| KeymanagerMsg::NewInputNameChanged(e));
-        let oninput_key = ctx.link().callback(move |e: InputEvent| KeymanagerMsg::NewInputKeyChanged(e));
+        let oninput_name = ctx
+            .link()
+            .callback(move |e: InputEvent| KeymanagerMsg::NewInputNameChanged(e));
+        let oninput_key = ctx
+            .link()
+            .callback(move |e: InputEvent| KeymanagerMsg::NewInputKeyChanged(e));
         let onclick_add = ctx.link().callback(|_| KeymanagerMsg::AddKey);
 
         html! {
@@ -196,22 +209,18 @@ impl Component for Keymanager {
                         extensions: vec!["allow_chain_in_thresh"],
                     },
                 ];
-                let begin = vec![
-                    BlocklyBlock {
-                        ty: "begin",
-                        message0: "Begin %1",
-                        args0: vec![
-                            BlocklyBlockArg::dummy(),
-                        ],
-                        output: None,
-                        next_statement: Some(ValueType::Policy),
-                        previous_statement: None,
-                        inputs_inline: false,
-                        tooltip: Some("Sets the beginning of the policy"),
-                        colour: 160,
-                        extensions: vec![],
-                    },
-                ];
+                let begin = vec![BlocklyBlock {
+                    ty: "begin",
+                    message0: "Begin %1",
+                    args0: vec![BlocklyBlockArg::dummy()],
+                    output: None,
+                    next_statement: Some(ValueType::Policy),
+                    previous_statement: None,
+                    inputs_inline: false,
+                    tooltip: Some("Sets the beginning of the policy"),
+                    colour: 160,
+                    extensions: vec![],
+                }];
                 let keys = vec![
                     BlocklyBlock {
                         ty: "my_key",
@@ -228,9 +237,7 @@ impl Component for Keymanager {
                     BlocklyBlock {
                         ty: "key",
                         message0: "%1",
-                        args0: vec![
-                            BlocklyBlockArg::field_number("Key", ""),
-                        ],
+                        args0: vec![BlocklyBlockArg::field_number("Key", "")],
                         output: Some(ValueType::Key),
                         next_statement: None,
                         previous_statement: None,
@@ -244,14 +251,14 @@ impl Component for Keymanager {
                     BlocklyBlock {
                         ty: "pk",
                         message0: "Key %1",
-                        args0: vec![
-                            BlocklyBlockArg::input_value("Key", ValueType::Key),
-                        ],
+                        args0: vec![BlocklyBlockArg::input_value("Key", ValueType::Key)],
                         output: None,
                         next_statement: Some(ValueType::Policy), // disabled on creation by blockly-ext
                         previous_statement: Some(ValueType::Policy),
                         inputs_inline: false,
-                        tooltip: Some("Require a signature from a given key to satisfy this fragment"),
+                        tooltip: Some(
+                            "Require a signature from a given key to satisfy this fragment",
+                        ),
                         colour: 120,
                         extensions: vec!["allow_chain_in_thresh"],
                     },
@@ -287,19 +294,36 @@ impl Component for Keymanager {
                     },
                 ];
 
-                define_blocks(control_flow.iter().chain(begin.iter()).chain(keys.iter()).chain(leaves.iter()));
+                define_blocks(
+                    control_flow
+                        .iter()
+                        .chain(begin.iter())
+                        .chain(keys.iter())
+                        .chain(leaves.iter()),
+                );
 
-                let workspace = inject_blockly("blocklyDiv", &BlocklyOptions{ 
-                    toolbox: BlocklyToolbox {
-                        kind: "categoryToolbox",
-                        contents: vec![
-                            BlocklyToolboxCategory::new("Control Flow", 230, control_flow.iter().map(|b| b.ty)),
-                            BlocklyToolboxCategory::new("Leaves", 120, leaves.iter().map(|b| b.ty)),
-                            BlocklyToolboxCategory::new("Keys", 65, keys.iter().map(|b| b.ty)),
-                        ],
+                let workspace = inject_blockly(
+                    "blocklyDiv",
+                    &BlocklyOptions {
+                        toolbox: BlocklyToolbox {
+                            kind: "categoryToolbox",
+                            contents: vec![
+                                BlocklyToolboxCategory::new(
+                                    "Control Flow",
+                                    230,
+                                    control_flow.iter().map(|b| b.ty),
+                                ),
+                                BlocklyToolboxCategory::new(
+                                    "Leaves",
+                                    120,
+                                    leaves.iter().map(|b| b.ty),
+                                ),
+                                BlocklyToolboxCategory::new("Keys", 65, keys.iter().map(|b| b.ty)),
+                            ],
+                        },
+                        trashcan: true,
                     },
-                    trashcan: true,
-                });
+                );
 
                 if let Some(state) = storage::load() {
                     *self.state.borrow_mut() = state;
@@ -315,33 +339,36 @@ impl Component for Keymanager {
                 insert_begin(&workspace);
 
                 false
-            },
+            }
             KeymanagerMsg::NewInputNameChanged(e) => {
                 self.new_input_name = e.target_unchecked_into::<HtmlInputElement>().value();
                 true
-            },
+            }
             KeymanagerMsg::NewInputKeyChanged(e) => {
                 self.key_err = None;
                 self.new_input_key = e.target_unchecked_into::<HtmlInputElement>().value();
                 true
-            },
+            }
             KeymanagerMsg::AddKey => {
                 match PublicKey::from_str(&self.new_input_key) {
                     Ok(key) => {
-                        self.state.borrow_mut().map.insert(self.new_input_name.clone(), key);
+                        self.state
+                            .borrow_mut()
+                            .map
+                            .insert(self.new_input_name.clone(), key);
 
                         self.new_input_name = String::new();
                         self.new_input_key = String::new();
 
                         storage::save(&self.state.borrow());
-                    },
+                    }
                     Err(e) => {
                         self.key_err = Some(e.to_string());
                     }
                 }
 
                 true
-            },
+            }
             KeymanagerMsg::RemoveKey(key) => {
                 self.state.borrow_mut().map.remove(&key);
                 storage::save(&self.state.borrow());

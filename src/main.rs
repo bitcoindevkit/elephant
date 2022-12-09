@@ -1,15 +1,17 @@
 mod app;
 mod app_wallet;
+mod home;
 mod keymanager;
 mod merge;
-mod home;
+mod policy_node;
+mod policy_view;
 mod sign;
 mod tab_create_tx;
 
 use app::App;
 use app_wallet::AppWallet;
-use merge::Merge;
 use home::Home;
+use merge::Merge;
 use sign::Sign;
 
 fn main() {
