@@ -12,3 +12,5 @@ categories = ["gui", "wasm", "web-programming"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 yew = "0.19"
+bdk = { version = "0.25.0", default-features = false, features = ["use-esplora-reqwest", "reqwest-default-tls"] }
+getrandom = { version = "0.2", features = ["js"] }
