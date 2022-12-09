@@ -98,7 +98,7 @@ impl Component for TabCreateTx {
         let result_html = match &self.psbt_result {
             Some(Ok((psbt, details))) => html! {
                 <div>
-                    <label>{ format!("PSBT Created: {}", details.txid) }</label>
+                    <label>{ format!("PSBT Created with txid: {}", details.txid) }</label>
                     <br/>
                     <textarea class="form-control daniela-textarea" rows="10" disabled=true value={ psbt.to_string() }></textarea>
                 </div>
