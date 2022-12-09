@@ -25,8 +25,11 @@ pub struct KeymanagerProps;
 pub enum KeymanagerMsg {
     FirstRender,
     NewInputNameChanged(InputEvent),
-    NewInputKeyChanged(InputEvent),
     AddKey,
+
+    LocalKeyInputChanged(InputEvent),
+    SetLocalKey,
+
     RemoveKey(String),
 
     Compiled(String),
@@ -34,8 +37,7 @@ pub enum KeymanagerMsg {
 
 pub struct Keymanager {
     new_input_name: String,
-    new_input_key: String,
-    key_err: Option<String>,
+    local_key_input: String,
 
     state: Rc<RefCell<State>>,
 
@@ -46,40 +48,76 @@ pub struct Keymanager {
 }
 
 impl Keymanager {
-    fn local_key(&self, _ctx: &Context<Self>) -> Html {
-        // TODO: to public key
-        html! {
-            <div class="row">
-                <input type="text" disabled=true value={self.state.borrow().local_key.to_string()} />
-            </div>
+    fn local_key(&self, ctx: &Context<Self>) -> Html {
+        let state = self.state.borrow();
+
+        if let Some(local_key) = state.local_key {
+            let local_key = local_key.public_key(&bdk::bitcoin::secp256k1::Secp256k1::new());
+            html! {
+                <div class="row">
+                    <input type="text" disabled=true value={local_key.to_string()} />
+                </div>
+            }
+        } else {
+            let oninput_name = ctx
+                .link()
+                .callback(move |e: InputEvent| KeymanagerMsg::LocalKeyInputChanged(e));
+            let onclick_add = ctx.link().callback(|_| KeymanagerMsg::SetLocalKey);
+            html! {
+                <div class="row input-grup has-validation">
+                    <input type={"text"} oninput={oninput_name} placeholder={"Name"} value={self.local_key_input.clone()} class="col-10" />
+                    <button type={"button"} class="btn btn-primary col-2" onclick={onclick_add} disabled={self.local_key_input.is_empty()}>
+                      <i class="ms-2 bi bi-plus-square"></i>
+                    </button>
+                </div>
+            }
         }
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct State {
-    local_key: PrivateKey,
-    map: HashMap<String, PublicKey>,
+    local_key: Option<PrivateKey>,
+    map: HashMap<String, PrivateKey>,
+}
+
+impl State {
+    pub fn add_alias(&mut self, alias: String) {
+        use bdk::bitcoin::hashes::Hash;
+
+        let hash = bdk::bitcoin::hashes::sha256::Hash::hash(alias.as_bytes());
+        let sk = PrivateKey {
+            compressed: true,
+            network: Network::Regtest,
+            inner: SecretKey::from_slice(&hash).expect("32 bytes, within curve order"),
+        };
+
+        self.map.insert(alias, sk);
+    }
+
+    pub fn set_local(&mut self, alias: String) {
+        use bdk::bitcoin::hashes::Hash;
+
+        let hash = bdk::bitcoin::hashes::sha256::Hash::hash(alias.as_bytes());
+        let sk = PrivateKey {
+            compressed: true,
+            network: Network::Regtest,
+            inner: SecretKey::from_slice(&hash).expect("32 bytes, within curve order"),
+        };
+
+        self.local_key = Some(sk);
+    }
 }
 
 impl State {
     fn new() -> Self {
-        let local_key = PrivateKey {
-            compressed: true,
-            network: Network::Regtest,
-            inner: SecretKey::new(&mut rand::thread_rng()),
+        let mut state = State {
+            local_key: None,
+            map: HashMap::new(),
         };
+        state.add_alias("example_key".to_string());
 
-        let map = vec![(
-            "example_key".into(),
-            PublicKey::from_str(
-                "038375785e012a64dbf86fb4cfe6b9c71e2d4677fddf7a15ceed7de5d36e23ec1a",
-            )
-            .unwrap(),
-        )]
-        .into_iter()
-        .collect();
-        State { local_key, map }
+        state
     }
 }
 
@@ -108,8 +146,7 @@ impl Component for Keymanager {
 
         Keymanager {
             new_input_name: String::new(),
-            new_input_key: String::new(),
-            key_err: None,
+            local_key_input: String::new(),
 
             state,
 
@@ -124,9 +161,6 @@ impl Component for Keymanager {
         let oninput_name = ctx
             .link()
             .callback(move |e: InputEvent| KeymanagerMsg::NewInputNameChanged(e));
-        let oninput_key = ctx
-            .link()
-            .callback(move |e: InputEvent| KeymanagerMsg::NewInputKeyChanged(e));
         let onclick_add = ctx.link().callback(|_| KeymanagerMsg::AddKey);
 
         html! {
@@ -143,6 +177,7 @@ impl Component for Keymanager {
                         { for self.state.borrow().map.iter().map(|(name, key)| {
                                 let name_cloned = name.clone();
                                 let remove_onclick = ctx.link().callback_once(move |_| KeymanagerMsg::RemoveKey(name_cloned));
+                                let key = key.public_key(&bdk::bitcoin::secp256k1::Secp256k1::new());
                                 html! {
                                     <div class="row mb-1">
                                         <span class="col-3">{ name.clone() }</span>
@@ -153,9 +188,8 @@ impl Component for Keymanager {
                             })
                         }
                         <div class="row input-grup has-validation">
-                            <input type={"text"} oninput={oninput_name} placeholder={"Name"} value={self.new_input_name.clone()} class="col-3" />
-                            <input type={"text"} oninput={oninput_key} placeholder={"Key"} value={self.new_input_key.clone()} class={classes!("col-7", self.key_err.as_ref().map(|_| "is-invalid"))} />
-                            <button type={"button"} class="btn btn-primary col-2" onclick={onclick_add} disabled={self.new_input_name.is_empty() || self.new_input_key.is_empty() || self.key_err.is_some()}>
+                            <input type={"text"} oninput={oninput_name} placeholder={"Name"} value={self.new_input_name.clone()} class="col-10" />
+                            <button type={"button"} class="btn btn-primary col-2" onclick={onclick_add} disabled={self.new_input_name.is_empty()}>
                               <i class="ms-2 bi bi-plus-square"></i>
                             </button>
                         </div>
@@ -351,28 +385,27 @@ impl Component for Keymanager {
                 self.new_input_name = e.target_unchecked_into::<HtmlInputElement>().value();
                 true
             }
-            KeymanagerMsg::NewInputKeyChanged(e) => {
-                self.key_err = None;
-                self.new_input_key = e.target_unchecked_into::<HtmlInputElement>().value();
+            KeymanagerMsg::AddKey => {
+                self.state
+                    .borrow_mut()
+                    .add_alias(self.new_input_name.clone());
+                self.new_input_name = String::new();
+
+                storage::save(&self.state.borrow());
+
                 true
             }
-            KeymanagerMsg::AddKey => {
-                match PublicKey::from_str(&self.new_input_key) {
-                    Ok(key) => {
-                        self.state
-                            .borrow_mut()
-                            .map
-                            .insert(self.new_input_name.clone(), key);
+            KeymanagerMsg::LocalKeyInputChanged(e) => {
+                self.local_key_input = e.target_unchecked_into::<HtmlInputElement>().value();
+                true
+            }
+            KeymanagerMsg::SetLocalKey => {
+                self.state
+                    .borrow_mut()
+                    .set_local(self.local_key_input.clone());
+                self.local_key_input = String::new();
 
-                        self.new_input_name = String::new();
-                        self.new_input_key = String::new();
-
-                        storage::save(&self.state.borrow());
-                    }
-                    Err(e) => {
-                        self.key_err = Some(e.to_string());
-                    }
-                }
+                storage::save(&self.state.borrow());
 
                 true
             }
@@ -383,8 +416,10 @@ impl Component for Keymanager {
                 true
             }
 
-            KeymanagerMsg::Compiled(desc) => {
-                let desc = desc.replace("_MY_KEY", &self.state.borrow().local_key.to_string());
+            KeymanagerMsg::Compiled(mut desc) => {
+                if let Some(local_key) = self.state.borrow().local_key {
+                    desc = desc.replace("_MY_KEY", &local_key.to_string());
+                }
                 log::info!("{}", desc);
                 self.dispatcher.send(Request::EventBusMsg(desc));
                 true
