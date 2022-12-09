@@ -52,11 +52,10 @@ impl Keymanager {
     fn local_key(&self, ctx: &Context<Self>) -> Html {
         let state = self.state.borrow();
 
-        if let Some(local_key) = state.local_key {
-            let local_key = local_key.public_key(&bdk::bitcoin::secp256k1::Secp256k1::new());
+        if let Some((_, alias)) = &state.local_key {
             html! {
                 <div class="row">
-                    <input type="text" disabled=true value={local_key.to_string()} />
+                    <input type="text" disabled=true value={alias.to_string()} />
                 </div>
             }
         } else {
@@ -78,7 +77,7 @@ impl Keymanager {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct State {
-    local_key: Option<PrivateKey>,
+    local_key: Option<(PrivateKey, String)>,
     map: HashMap<String, PrivateKey>,
 }
 
@@ -106,7 +105,7 @@ impl State {
             inner: SecretKey::from_slice(&hash).expect("32 bytes, within curve order"),
         };
 
-        self.local_key = Some(sk);
+        self.local_key = Some((sk, alias));
     }
 }
 
@@ -139,7 +138,10 @@ impl Component for Keymanager {
             let dropdown = state_cloned
                 .map
                 .iter()
-                .map(|(k, v)| (k, v.to_string()))
+                .map(|(k, v)| {
+                    let key = v.public_key(&bdk::bitcoin::secp256k1::Secp256k1::new());
+                    (k, key)
+                })
                 .collect::<Vec<_>>();
             log::debug!("{:?}", dropdown);
             serde_wasm_bindgen::to_value(&dropdown).unwrap()
@@ -184,7 +186,7 @@ impl Component for Keymanager {
                                     <div class="row mb-1">
                                         <span class="col-10">{ name.clone() }</span>
                                         // <span class="col-7">{ key.clone() }</span>
-                                        <button type="button" onclick={remove_onclick} disabled={name == "example_key"} class="col-2 btn btn-primary"><i class="bi bi-trash"></i></button>
+                                        <button type="button" onclick={remove_onclick} disabled={self.state.borrow().map.len() == 1} class="col-2 btn btn-primary"><i class="bi bi-trash"></i></button>
                                     </div>
                                 }
                             })
@@ -421,7 +423,7 @@ impl Component for Keymanager {
             }
 
             KeymanagerMsg::Compiled(mut desc) => {
-                if let Some(local_key) = self.state.borrow().local_key {
+                if let Some((local_key, _)) = self.state.borrow().local_key {
                     desc = desc.replace("_MY_KEY", &local_key.to_string());
                 }
                 log::info!("{}", desc);
