@@ -168,13 +168,16 @@ impl Component for Keymanager {
         html! {
             <div class="container" style="height: 800px;">
                 <div class="row" style="height: 100%;">
-                    <div id="blocklyArea" class="col-8" style="height: 100%;">
+                    <div id="blocklyArea" class="col-6 px-5" style="height: 100%;">
                         <div id="blocklyDiv" style="position: absolute;"></div>
                     </div>
-                    <div class="col-4">
-                        <h2>{ "Local Key" }</h2>
-                        { self.local_key(ctx) }
+                    <div class="col-6 px-5">
+                        <div>
+                            <h2>{ "Local Key" }</h2>
+                            { self.local_key(ctx) }
+                        </div>
 
+                        <div style="margin-top: 20px">
                         <h2>{ "Remote Keys" }</h2>
                         { for self.state.borrow().map.iter().map(|(name, key)| {
                                 let name_cloned = name.clone();
@@ -189,6 +192,7 @@ impl Component for Keymanager {
                                 }
                             })
                         }
+                        </div>
                         <div class="row input-grup has-validation">
                             <input type={"text"} oninput={oninput_name} placeholder={"Name"} value={self.new_input_name.clone()} class="col-10" />
                             <button type={"button"} class="btn btn-primary col-2" onclick={onclick_add} disabled={self.new_input_name.is_empty()}>
