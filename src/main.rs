@@ -1,10 +1,12 @@
 mod app;
 mod app_wallet;
 mod keymanager;
+mod merge;
 mod sign;
 
 use app::App;
 use app_wallet::AppWallet;
+use merge::Merge;
 use sign::Sign;
 
 fn main() {
