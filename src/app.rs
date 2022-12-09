@@ -2,6 +2,7 @@ use crate::AppWallet;
 use bdk::bitcoin;
 use bdk::miniscript::policy::Concrete;
 use std::str::FromStr;
+use yew::functional::*;
 use yew::prelude::*;
 use yew_agent::{Bridge, Bridged};
 use yew_router::prelude::*;
@@ -42,16 +43,16 @@ fn parse_policy(policy: &str) -> Result<AppWallet, Box<dyn std::error::Error>> {
 }
 
 impl App {
-fn create_tab(&self) -> Html {
-    match self.current_tab {
-        Tabs::Home => html! { < crate::home::Home /> },
-        Tabs::KeyManagement => html! {< crate::keymanager::Keymanager />},
-        Tabs::CreateTx => html! { { "TODO" } },
-        //Route::CreateTx => html! { < crate::tab_create_tx::TabCreateTx /> },
-        Tabs::SignTx => html! { < crate::sign::Sign /> },
-        Tabs::Merge => html! { < crate::merge::Merge /> },
+    fn create_tab(&self) -> Html {
+        match self.current_tab {
+            Tabs::Home => html! { < crate::home::Home /> },
+            Tabs::KeyManagement => html! {< crate::keymanager::Keymanager />},
+            Tabs::CreateTx => html! { { "TODO" } },
+            //Route::CreateTx => html! { < crate::tab_create_tx::TabCreateTx /> },
+            Tabs::SignTx => html! { < crate::sign::Sign /> },
+            Tabs::Merge => html! { < crate::merge::Merge /> },
+        }
     }
-}
 }
 
 impl Component for App {

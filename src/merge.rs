@@ -57,7 +57,8 @@ impl Component for Merge {
             Some(Err(e)) => ("".to_string(), e.to_string()),
             _ => ("".to_string(), "".to_string()),
         };
-        let broadcast_disabled = self.merged_psbt.is_none() || merge_error != "" || self.is_broadcasting;
+        let broadcast_disabled =
+            self.merged_psbt.is_none() || merge_error != "" || self.is_broadcasting;
         let is_invalid = if merge_error != "" { "is-invalid" } else { "" };
         html! {
             <div class="daniela">
@@ -159,17 +160,18 @@ impl Component for Merge {
             }
             Msg::BroadcastTriggered => {
                 log::info!("Broadcast");
-                self.is_broadcasting = true; 
-                let tx = self.merged_psbt.as_ref().unwrap().as_ref().unwrap().clone().extract_tx();
+                self.is_broadcasting = true;
+                let tx = self
+                    .merged_psbt
+                    .as_ref()
+                    .unwrap()
+                    .as_ref()
+                    .unwrap()
+                    .clone()
+                    .extract_tx();
                 let wallet_cloned = self.wallet.0.clone();
                 ctx.link().send_future(async move {
-                    let res = wallet_cloned
-                        .borrow()
-                        .1
-                        .broadcast(
-                            &tx,
-                        )
-                        .await;
+                    let res = wallet_cloned.borrow().1.broadcast(&tx).await;
                     Msg::BroadcastFinished(res.map_err(|e| e.to_string()))
                 });
                 true
