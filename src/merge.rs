@@ -116,12 +116,12 @@ impl Component for Merge {
                 </div>
                 <div>
                     <button class="btn btn-primary daniela-button" onclick={add_psbt} disabled={ add_psbt_disabled }>{ "Add PSBT" }</button>
-                    <button class="btn btn-primary daniela-button" onclick={merge} disabled={ merge_disabled }>{ "Finish" }</button>
                 </div>
                 <textarea class={classes!("form-control","daniela-textarea",is_invalid)} id="merged-psbt-textarea" rows="10" disabled=true value={merged_psbt}></textarea>
                 <div class="invalid-feedback">
                 { format!("Error merging PSBTs: {}", merge_error) }
                 </div>
+                <button class="btn btn-primary daniela-button" onclick={merge} disabled={ merge_disabled }>{ "Finish" }</button>
                 <button class="btn btn-primary daniela-button" onclick={broadcast} disabled={ broadcast_disabled }>{ if self.is_broadcasting { "Broadcasting..." } else { "Broadcast" } }</button>
                 <div>
                     <label> { broadcast_result_msg } </label>
