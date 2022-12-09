@@ -38,7 +38,7 @@ fn parse_policy(policy: &str) -> Result<AppWallet, Box<dyn std::error::Error>> {
     Ok(AppWallet::new(
         &format!("wsh({})", segwit_policy),
         None,
-        bitcoin::Network::Testnet,
+        bitcoin::Network::Regtest,
     )?)
 }
 
