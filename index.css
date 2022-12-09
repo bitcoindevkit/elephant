@@ -7,8 +7,11 @@
 }
 
 .daniela-textarea {
-    margin-top: 10px;
     margin-bottom: 10px;
+}
+
+#merged-psbt-textarea, #signed-psbt-textarea {
+    margin-top: 50px;
 }
 
 .daniela-table {
@@ -45,6 +48,7 @@
 
 .daniela-button {
     margin-top: 20px;
+    margin-right: 5px;
     width: 200px;
     align-self: center;
 }

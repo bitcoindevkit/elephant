@@ -11,7 +11,8 @@ pub enum Msg {
     DeletePsbt(usize),
     NewPsbtField,
     Merge,
-    Broadcast,
+    BroadcastTriggered,
+    BroadcastFinished(Result<(), String>),
 }
 
 #[derive(Default, Properties, PartialEq)]
@@ -20,8 +21,8 @@ pub struct Props {}
 pub struct Merge {
     psbts: Vec<(Option<Result<PartiallySignedTransaction, String>>, usize)>,
     merged_psbt: Option<Result<PartiallySignedTransaction, String>>,
-    finalized_tx: Option<Transaction>,
     wallet: AppWallet,
+    is_broadcasting: bool,
     key_n: usize,
 }
 
@@ -39,28 +40,28 @@ impl Component for Merge {
         Self {
             psbts: vec![(None, 0)],
             merged_psbt: None,
-            finalized_tx: None,
             wallet,
             key_n: 0,
+            is_broadcasting: false,
         }
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let merge = ctx.link().callback(|_| Msg::Merge);
         let add_psbt = ctx.link().callback(|_| Msg::NewPsbtField);
-        let broadcast = ctx.link().callback(|_| Msg::Broadcast);
+        let broadcast = ctx.link().callback(|_| Msg::BroadcastTriggered);
         let mut add_psbt_disabled = false;
         let mut merge_disabled = false;
-        let broadcast_disabled = true;
         let (merged_psbt, merge_error) = match &self.merged_psbt {
             Some(Ok(p)) => (p.clone().to_string(), "".to_string()),
             Some(Err(e)) => ("".to_string(), e.to_string()),
             _ => ("".to_string(), "".to_string()),
         };
+        let broadcast_disabled = self.merged_psbt.is_none() || merge_error != "" || self.is_broadcasting;
         let is_invalid = if merge_error != "" { "is-invalid" } else { "" };
         html! {
             <div class="daniela">
-                <h1>{ "Merge PSBTs" }</h1>
+                <label for="accordionExample" class="form-label">{"Paste here the PSBTs to merge:"}</label>
                 <div class="accordion" id="accordionExample">
                     {
                         for self.psbts.iter().enumerate().map(|(i, (psbt, key))| {
@@ -104,18 +105,20 @@ impl Component for Merge {
                         })
                     }
                 </div>
-                <button class="btn btn-primary" onclick={add_psbt} disabled={ add_psbt_disabled }>{ "Add PSBT" }</button>
-                <button class="btn btn-primary" onclick={merge} disabled={ merge_disabled }>{ "Merge" }</button>
-                <button class="btn btn-primary" onclick={broadcast} disabled={ broadcast_disabled }>{ "Broadcast" }</button>
-                <textarea class={classes!("form-control","daniela-textarea",is_invalid)} rows="10" disabled=true value={merged_psbt}></textarea>
+                <div>
+                    <button class="btn btn-primary daniela-button" onclick={add_psbt} disabled={ add_psbt_disabled }>{ "Add PSBT" }</button>
+                    <button class="btn btn-primary daniela-button" onclick={merge} disabled={ merge_disabled }>{ "Merge" }</button>
+                </div>
+                <textarea class={classes!("form-control","daniela-textarea",is_invalid)} id="merged-psbt-textarea" rows="10" disabled=true value={merged_psbt}></textarea>
                 <div class="invalid-feedback">
                 { format!("Error merging PSBTs: {}", merge_error) }
                 </div>
+                <button class="btn btn-primary daniela-button" onclick={broadcast} disabled={ broadcast_disabled }>{ if self.is_broadcasting { "Broadcasting..." } else { "Broadcast" } }</button>
             </div>
         }
     }
 
-    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::PsbtChanged(i, e) => {
                 let psbt = e.target_unchecked_into::<HtmlInputElement>().value();
@@ -154,9 +157,25 @@ impl Component for Merge {
                 self.merged_psbt = Some(Ok(temp));
                 true
             }
-            Msg::Broadcast => {
+            Msg::BroadcastTriggered => {
                 log::info!("Broadcast");
-                // TODO!!
+                self.is_broadcasting = true; 
+                let tx = self.merged_psbt.as_ref().unwrap().as_ref().unwrap().clone().extract_tx();
+                let wallet_cloned = self.wallet.0.clone();
+                ctx.link().send_future(async move {
+                    let res = wallet_cloned
+                        .borrow()
+                        .1
+                        .broadcast(
+                            &tx,
+                        )
+                        .await;
+                    Msg::BroadcastFinished(res.map_err(|e| e.to_string()))
+                });
+                true
+            }
+            Msg::BroadcastFinished(res) => {
+                self.is_broadcasting = false;
                 true
             }
         }

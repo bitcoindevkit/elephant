@@ -51,14 +51,13 @@ impl Component for Sign {
         };
         html! {
             <div class="daniela">
-                <h1>{ "Sign a PSBT" }</h1>
-                //<label for="psbtTextArea" class="form-label">{"Paste here your PSBT:"}</label>
+                <label for="psbtTextArea" class="form-label">{"Paste here your PSBT:"}</label>
                 <textarea id="psbtTextArea" class={classes!("form-control", "daniela-textarea", is_invalid).to_string()} rows="5" {oninput}></textarea>
                 <div class="invalid-feedback">
                 { "Please enter a valid PSBT" }
                 </div>
                 <button class="btn btn-primary" {onclick} disabled={ button_disabled }>{ "Sign" }</button>
-                <textarea class="form-control daniela-textarea" rows="10" disabled=true value={self.signed_psbt.as_ref().map(|s| s.to_string())}></textarea>
+                <textarea class="form-control daniela-textarea" id="signed-psbt-textarea" rows="10" disabled=true value={self.signed_psbt.as_ref().map(|s| s.to_string())}></textarea>
             </div>
         }
     }
