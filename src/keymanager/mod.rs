@@ -179,11 +179,11 @@ impl Component for Keymanager {
                         { for self.state.borrow().map.iter().map(|(name, key)| {
                                 let name_cloned = name.clone();
                                 let remove_onclick = ctx.link().callback_once(move |_| KeymanagerMsg::RemoveKey(name_cloned));
-                                let key = key.public_key(&bdk::bitcoin::secp256k1::Secp256k1::new());
+                                // let key = key.public_key(&bdk::bitcoin::secp256k1::Secp256k1::new());
                                 html! {
                                     <div class="row mb-1">
-                                        <span class="col-3">{ name.clone() }</span>
-                                        <span class="col-7">{ key.clone() }</span>
+                                        <span class="col-10">{ name.clone() }</span>
+                                        // <span class="col-7">{ key.clone() }</span>
                                         <button type="button" onclick={remove_onclick} disabled={name == "example_key"} class="col-2 btn btn-primary"><i class="bi bi-trash"></i></button>
                                     </div>
                                 }
