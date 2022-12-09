@@ -52,7 +52,7 @@ impl App {
             Tabs::CreateTx => {
                 html! { < crate::tab_create_tx::TabCreateTx wallet={self.wallet.as_ref().unwrap().clone()} /> }
             }
-            Tabs::SignTx => html! { < crate::sign::Sign /> },
+            Tabs::SignTx => html! { < crate::sign::Sign wallet={self.wallet.as_ref().unwrap().clone()} /> },
             Tabs::Merge => html! { < crate::merge::Merge /> },
         }
     }

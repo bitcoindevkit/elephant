@@ -14,8 +14,10 @@ pub enum Msg {
     Sign,
 }
 
-#[derive(Default, Properties, PartialEq)]
-pub struct Props {}
+#[derive(Properties, PartialEq)]
+pub struct Props {
+    pub wallet: AppWallet,
+}
 
 pub struct Sign {
     psbt: Option<Result<PartiallySignedTransaction, ()>>,
@@ -27,16 +29,11 @@ impl Component for Sign {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(_ctx: &Context<Self>) -> Self {
-        let wallet = AppWallet::new(
-            "tr(cVd1Ew5616o4FQaXDpq2LcdqGUgMVpbVa2MkqqmWibsQ8g4pH4qc)",
-            None,
-            bitcoin::Network::Testnet,
-        )
-        .unwrap();
+    fn create(ctx: &Context<Self>) -> Self {
+        let props = ctx.props();
         Self {
+            wallet: props.wallet.clone(),
             psbt: None,
-            wallet,
             signed_psbt: None,
         }
     }
