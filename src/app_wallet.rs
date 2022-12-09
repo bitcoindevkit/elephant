@@ -3,10 +3,13 @@ use std::{
     rc::Rc,
 };
 
-use bdk::{bitcoin::Network, database::MemoryDatabase, descriptor::IntoWalletDescriptor};
+use bdk::{
+    bitcoin::Network, blockchain::EsploraBlockchain, database::MemoryDatabase,
+    descriptor::IntoWalletDescriptor,
+};
 
 #[derive(Clone)]
-pub struct AppWallet(Rc<RefCell<bdk::Wallet<MemoryDatabase>>>);
+pub struct AppWallet(pub Rc<RefCell<(bdk::Wallet<MemoryDatabase>, EsploraBlockchain)>>);
 
 impl AppWallet {
     pub fn new<E: IntoWalletDescriptor>(
@@ -20,14 +23,15 @@ impl AppWallet {
             network,
             MemoryDatabase::new(),
         )?;
-        Ok(Self(Rc::new(RefCell::new(wallet))))
+        let esplora = EsploraBlockchain::new("https://blockstream.info/testnet/api", 20);
+        Ok(Self(Rc::new(RefCell::new((wallet, esplora)))))
     }
 
-    pub fn borrow(&self) -> Ref<bdk::Wallet<MemoryDatabase>> {
+    pub fn borrow(&self) -> Ref<(bdk::Wallet<MemoryDatabase>, EsploraBlockchain)> {
         self.0.borrow()
     }
 
-    pub fn borrow_mut(&self) -> RefMut<bdk::Wallet<MemoryDatabase>> {
+    pub fn borrow_mut(&self) -> RefMut<(bdk::Wallet<MemoryDatabase>, EsploraBlockchain)> {
         self.0.borrow_mut()
     }
 }
