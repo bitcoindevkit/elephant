@@ -1,13 +1,8 @@
 use crate::AppWallet;
 use bdk::bitcoin::util::psbt::PartiallySignedTransaction;
 use bdk::bitcoin::*;
-use bdk::blockchain::EsploraBlockchain;
-use bdk::database::MemoryDatabase;
-use bdk::wallet::signer::SignOptions;
-use bdk::wallet::{AddressIndex, AddressInfo};
+use bdk::wallet::AddressIndex;
 use bdk::*;
-use std::str::FromStr;
-use web_sys::{EventTarget, HtmlInputElement};
 use yew::prelude::*;
 
 pub enum Msg {

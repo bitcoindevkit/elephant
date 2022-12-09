@@ -9,10 +9,13 @@ use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 use web_sys::{EventTarget, HtmlInputElement};
 use yew::prelude::*;
+use yew::prelude::*;
+use yew_agent::{Dispatched, Dispatcher};
 
 mod blockly;
 mod storage;
 
+use crate::evt::{EventBus, Request};
 use blockly::*;
 
 #[derive(Debug, PartialEq, Properties)]
@@ -38,6 +41,8 @@ pub struct Keymanager {
 
     compiled_cb: Closure<dyn FnMut(String)>,
     dropdown_cb: Closure<dyn FnMut() -> JsValue>,
+
+    dispatcher: Dispatcher<EventBus>,
 }
 
 impl Keymanager {
@@ -110,6 +115,8 @@ impl Component for Keymanager {
 
             compiled_cb,
             dropdown_cb,
+
+            dispatcher: EventBus::dispatcher(),
         }
     }
 
@@ -379,6 +386,7 @@ impl Component for Keymanager {
             KeymanagerMsg::Compiled(desc) => {
                 let desc = desc.replace("_MY_KEY", &self.state.borrow().local_key.to_string());
                 log::info!("{}", desc);
+                self.dispatcher.send(Request::EventBusMsg(desc));
                 true
             }
         }
