@@ -98,7 +98,7 @@ impl Component for TabCreateTx {
         let result_html = match &self.psbt_result {
             Some(Ok((psbt, details))) => html! {
                 <div>
-                    <label>{ format!("PSBT Created: {:?}", details) }</label>
+                    <label>{ format!("PSBT Created: {}", details.txid) }</label>
                     <br/>
                     <textarea class="form-control daniela-textarea" rows="10" disabled=true value={ psbt.to_string() }></textarea>
                 </div>
@@ -112,18 +112,16 @@ impl Component for TabCreateTx {
         };
 
         html! {
-            <div style = { "margin-left: 40px" } >
-                <h2>{ "Create Unsigned PSBT" }</h2>
-
+            <div class = "daniela" >
                 <label>{ "Destination Address: " }</label>
-                <input type="text" oninput={oninput_address}/>
+                <input type="text" class="form-control" oninput={oninput_address}/>
                 <br/>
                 <label>{ "Amount (sats): " }</label>
-                <input type="number" oninput={oninput_amount}/>
+                <input type="number" class="form-control" oninput={oninput_amount}/>
                 <br/>
                 <PolicyView selection={policy_selection} node={policy}/>
                 <br/>
-                <button onclick={onclick_create_button}> { "Create" } </button>
+                <button class="btn btn-primary" onclick={onclick_create_button}> { "Create" } </button>
                 <br/>
                 { result_html }
             </div>
