@@ -22,7 +22,8 @@ Now that we have our basics covered, it's time to install the star of the show: 
 Simply run the following command to install it:
 
 ```bash
-cargo install trunk wasm-bindgen-cli
+cargo install wasm-bindgen-cli
+cargo install --git https://github.com/thedodd/trunk.git trunk
 ```
 
 That's it, we're done!
