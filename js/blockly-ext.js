@@ -98,6 +98,9 @@ window.BlocklyExt.insertBegin = function(workspace, compiled_cb, dropdown_cb) {
     beginBlock.initSvg();
     beginBlock.render();
 }
+window.BlocklyExt.saveBlockly = function(workspace) {
+    BlocklyStorage.backupBlocks_(workspace);
+}
 
 Blockly.JavaScript.INDENT = '';
 Blockly.JavaScript['begin'] = function(block) {

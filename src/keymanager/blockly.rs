@@ -17,6 +17,8 @@ extern "C" {
     fn initJs(workspace: &JsValue, compiled_cb: &JsValue, dropdown_cb: &JsValue);
     #[wasm_bindgen(js_namespace = BlocklyExt)]
     fn insertBegin(workspace: &JsValue);
+    #[wasm_bindgen(js_namespace = BlocklyExt)]
+    fn saveBlockly(workspace: &JsValue);
 }
 
 pub struct Workspace(JsValue);
@@ -49,6 +51,9 @@ pub fn init_js(
 }
 pub fn insert_begin(workspace: &Workspace) {
     insertBegin(&workspace.0);
+}
+pub fn save_blockly(workspace: &Workspace) {
+    saveBlockly(&workspace.0)
 }
 
 #[derive(Debug, Serialize)]

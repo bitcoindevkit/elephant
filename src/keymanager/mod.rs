@@ -45,6 +45,7 @@ pub struct Keymanager {
     dropdown_cb: Closure<dyn FnMut() -> JsValue>,
 
     dispatcher: Dispatcher<EventBus>,
+    workspace: Option<Workspace>,
 }
 
 impl Keymanager {
@@ -154,6 +155,7 @@ impl Component for Keymanager {
             dropdown_cb,
 
             dispatcher: EventBus::dispatcher(),
+            workspace: None,
         }
     }
 
@@ -379,6 +381,8 @@ impl Component for Keymanager {
 
                 insert_begin(&workspace);
 
+                self.workspace = Some(workspace);
+
                 false
             }
             KeymanagerMsg::NewInputNameChanged(e) => {
@@ -432,6 +436,12 @@ impl Component for Keymanager {
             // Delay to the next tick to ensure the DOM has been updated before we try to
             // initialize blockly
             ctx.link().send_message(KeymanagerMsg::FirstRender);
+        }
+    }
+
+    fn destroy(&mut self, _ctx: &Context<Self>) {
+        if let Some(workspace) = &self.workspace {
+            save_blockly(workspace);
         }
     }
 }
