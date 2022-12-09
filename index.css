@@ -10,3 +10,41 @@
     margin-top: 10px;
     margin-bottom: 10px;
 }
+
+.daniela-table {
+    width: 70% !important;
+    white-space: nowrap;
+    margin: auto;
+}
+
+.daniela-table-align-right {
+    text-align: right;
+}
+
+.daniela-home {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 70vh;
+}
+
+.balance-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 50vh;
+}
+
+.balance {
+    font-size: 80px;
+}
+
+.balance-unconfirmed {
+    font-size: 20px;
+}
+
+.daniela-button {
+    margin-top: 20px;
+    width: 200px;
+    align-self: center;
+}
