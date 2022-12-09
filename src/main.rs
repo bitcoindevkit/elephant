@@ -1,5 +1,6 @@
 mod app;
 mod app_wallet;
+mod keymanager;
 
 use app::App;
 use app_wallet::AppWallet;
