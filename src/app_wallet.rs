@@ -8,6 +8,9 @@ use bdk::{
     descriptor::IntoWalletDescriptor,
 };
 
+const BLOCKSTREAM_URL: &'static str = "https://blockstream.info/testnet/api";
+const RAJ_URL: &'static str = "http://192.168.1.190:3002";
+
 #[derive(Clone)]
 pub struct AppWallet(pub Rc<RefCell<(bdk::Wallet<MemoryDatabase>, EsploraBlockchain)>>);
 
@@ -23,7 +26,7 @@ impl AppWallet {
             network,
             MemoryDatabase::new(),
         )?;
-        let esplora = EsploraBlockchain::new("https://blockstream.info/testnet/api", 20);
+        let esplora = EsploraBlockchain::new(RAJ_URL, 20);
         Ok(Self(Rc::new(RefCell::new((wallet, esplora)))))
     }
 

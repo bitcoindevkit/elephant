@@ -34,7 +34,7 @@ impl Component for Merge {
         let wallet = AppWallet::new(
             "tr(cVd1Ew5616o4FQaXDpq2LcdqGUgMVpbVa2MkqqmWibsQ8g4pH4qc)",
             None,
-            bitcoin::Network::Testnet,
+            bitcoin::Network::Regtest,
         )
         .unwrap();
         Self {
