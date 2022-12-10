@@ -1,5 +1,5 @@
 use crate::AppWallet;
-use bdk::bitcoin;
+use bdk::{Balance, bitcoin};
 use bdk::miniscript::policy::Concrete;
 use std::str::FromStr;
 use yew::functional::*;
@@ -13,10 +13,14 @@ pub struct App {
     wallet: Option<AppWallet>,
     _recv: Box<dyn Bridge<EventBus>>,
     current_tab: Tabs,
+    is_loading: bool,
+    balance: bdk::Balance,
+    transactions: Vec<(String, i64)>,
 }
 
 pub enum Msg {
-    Reload,
+    ReloadTriggered,
+    ReloadFinished,
     TabChange(Tabs),
     Descriptor(String),
 }
@@ -48,7 +52,7 @@ impl App {
     fn create_tab(&self) -> Html {
         match self.current_tab {
             Tabs::Home => {
-                html! { < crate::home::Home wallet={self.wallet.as_ref().unwrap().clone()} /> }
+                html! { < crate::home::Home wallet={self.wallet.as_ref().unwrap().clone()} transactions = {self.transactions.clone()} balance = {self.balance.clone()} /> }
             }
             Tabs::KeyManagement => html! {< crate::keymanager::Keymanager />},
             Tabs::CreateTx => {
@@ -70,13 +74,16 @@ impl Component for App {
 
     fn create(ctx: &Context<Self>) -> Self {
         App {
+            is_loading: false,
             wallet: None,
             _recv: EventBus::bridge(ctx.link().callback(Msg::Descriptor)),
             current_tab: Tabs::KeyManagement,
+            balance: Balance::default(),
+            transactions: vec![],
         }
     }
 
-    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::Descriptor(s) => {
                 match parse_policy(&s) {
@@ -95,7 +102,38 @@ impl Component for App {
                 self.current_tab = t;
                 true
             }
-            _ => false,
+            Msg::ReloadTriggered => {
+                self.is_loading = true;
+                let wallet_cloned = self.wallet.as_ref().unwrap().0.clone();
+                ctx.link().send_future(async move {
+                    let res = wallet_cloned
+                        .borrow()
+                        .0
+                        .sync(
+                            &wallet_cloned.borrow().1,
+                            bdk::wallet::SyncOptions::default(),
+                        )
+                        .await;
+                    Msg::ReloadFinished
+                });
+                true
+            },
+            Msg::ReloadFinished => {
+                self.is_loading = false;
+                self.balance = self.wallet.as_ref().unwrap().borrow().0.get_balance().unwrap();
+                let mut temp_tx = self.wallet.as_ref().unwrap().borrow().0.list_transactions(false).unwrap();
+                temp_tx.sort_by(|a, b| {
+                    b.confirmation_time
+                        .as_ref()
+                        .map(|t| t.height)
+                        .cmp(&a.confirmation_time.as_ref().map(|t| t.height))
+                });
+                self.transactions = temp_tx
+                    .into_iter()
+                    .map(|tx| (tx.txid.to_string(), tx.received as i64 - tx.sent as i64))
+                    .collect();
+                true
+            }
         }
     }
 
@@ -106,6 +144,8 @@ impl Component for App {
         };
         let link = ctx.link().clone();
         let onclick = move |t: Tabs| ctx.link().callback(move |_| Msg::TabChange(t));
+        let onclick_load = ctx.link().callback(move |_| Msg::ReloadTriggered);
+        let disabled = self.is_loading || self.wallet.is_none();
 
         html! {
             <div>
@@ -122,6 +162,7 @@ impl Component for App {
                             <li class="nav-item"><a onclick={onclick(Tabs::SignTx)} class={classes!("nav-link", disabled_link)}>{ "Sign transaction" }</a></li>
                             <li class="nav-item"><a onclick={onclick(Tabs::Merge)} class="nav-link">{ "Merge and broadcast" }</a></li>
                         </ul>
+                        <button type="button" class="btn btn-primary" onclick={onclick_load} {disabled}>{if self.is_loading { "Loading..." } else { "Sync wallet" }}</button>
                     </header>
                 </div>
                 { self.create_tab() }

@@ -10,16 +10,16 @@ pub enum Msg {
     ReloadFinished(Result<(), bdk::Error>),
 }
 
-#[derive(Properties, PartialEq)]
+#[derive(Properties, PartialEq, Clone)]
 pub struct Props {
     pub wallet: AppWallet,
+    pub transactions: Vec<(String, i64)>,
+    pub balance: bdk::Balance,
 }
 
 pub struct Home {
-    wallet: AppWallet,
-    balance: bdk::Balance,
+    props: Props,
     address: String,
-    transactions: Vec<(String, i64)>,
     is_loading: bool,
 }
 
@@ -30,7 +30,7 @@ impl Component for Home {
     type Properties = Props;
 
     fn create(ctx: &Context<Self>) -> Self {
-        let props = ctx.props();
+        let props = ctx.props().clone();
         let address = props
             .wallet
             .borrow()
@@ -39,10 +39,8 @@ impl Component for Home {
             .unwrap()
             .to_string();
         Self {
-            wallet: props.wallet.clone(),
-            balance: Balance::default(),
+            props,
             address,
-            transactions: vec![],
             is_loading: false,
         }
     }
@@ -58,17 +56,15 @@ impl Component for Home {
             let btc = n;
             format!("{}.{:02} {:03} {:03}", btc, sats_1, sats_2, sats_3)
         };
-        let onclick = ctx.link().callback(|_| Msg::ReloadTriggered);
         let disabled = self.is_loading;
         html! {
             <div>
                 <div class="daniela-home text-center">
                     <div class="balance-wrapper">
-                        <div class="balance"> { format!("{} sats", satcommify(self.balance.get_spendable())) } </div>
-                        <div class="balance-unconfirmed"> { format!("+ {} sats unconfirmed", satcommify(self.balance.untrusted_pending)) } </div>
+                        <div class="balance"> { format!("{} sats", satcommify(self.props.balance.get_spendable())) } </div>
+                        <div class="balance-unconfirmed"> { format!("+ {} sats unconfirmed", satcommify(self.props.balance.untrusted_pending)) } </div>
                     </div>
-                    <div class="address"> { format!("Send money to: {}", self.address) } </div>
-                    <button type="button" class="btn btn-primary daniela-button" {onclick} {disabled}>{if disabled { "Loading..." } else { "Reload" }}</button>
+                    <div class="address"> { format!("Receiving address: {}", self.address) } </div>
                 </div>
                 <div class="table-responsive">
                     <table class="table-sm daniela-table">
@@ -76,7 +72,7 @@ impl Component for Home {
                         </thead>
                         <tbody>
                             {
-                                for self.transactions.iter().map(|tx| { html! {
+                                for self.props.transactions.iter().map(|tx| { html! {
                                     <tr>
                                         <td scope="row">{tx.0.clone()}</td>
                                         <td class="daniela-table-align-right">{format!("{} {} sats", if tx.1 >= 0 { "+" } else { "-" }, satcommify(tx.1.abs() as u64))}</td>
@@ -90,46 +86,9 @@ impl Component for Home {
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
-        match msg {
-            Msg::ReloadTriggered => {
-                self.is_loading = true;
-                let wallet_cloned = self.wallet.0.clone();
-                ctx.link().send_future(async move {
-                    let res = wallet_cloned
-                        .borrow()
-                        .0
-                        .sync(
-                            &wallet_cloned.borrow().1,
-                            bdk::wallet::SyncOptions::default(),
-                        )
-                        .await;
-                    Msg::ReloadFinished(res)
-                });
-                true
-            }
-            Msg::ReloadFinished(res) => {
-                self.balance = self.wallet.borrow().0.get_balance().unwrap();
-                let mut temp_tx = self.wallet.borrow().0.list_transactions(false).unwrap();
-                temp_tx.sort_by(|a, b| {
-                    b.confirmation_time
-                        .as_ref()
-                        .map(|t| t.height)
-                        .cmp(&a.confirmation_time.as_ref().map(|t| t.height))
-                });
-                self.transactions = temp_tx
-                    .into_iter()
-                    .map(|tx| (tx.txid.to_string(), tx.received as i64 - tx.sent as i64))
-                    .collect();
-                self.is_loading = false;
-                true
-            }
-        }
-    }
-
     fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if first_render {
-            let wallet_cloned = self.wallet.0.clone();
+            let wallet_cloned = self.props.wallet.0.clone();
             ctx.link().send_future(async move {
                 let res = wallet_cloned
                     .borrow()
@@ -141,6 +100,15 @@ impl Component for Home {
                     .await;
                 Msg::ReloadFinished(res)
             });
+        }
+    }
+
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if &self.props != ctx.props() {
+            self.props = ctx.props().clone();
+            true
+        } else {
+            false
         }
     }
 }
