@@ -100,7 +100,7 @@ impl Component for TabCreateTx {
                 <div>
                     <label>{ format!("PSBT Created with txid: {}", details.txid) }</label>
                     <br/>
-                    <textarea class="form-control daniela-textarea" rows="10" disabled=true value={ psbt.to_string() }></textarea>
+                    <textarea class="form-control daniela-textarea" rows="10" readonly=true value={ psbt.to_string() }></textarea>
                 </div>
             },
             Some(Err(err)) => html! {

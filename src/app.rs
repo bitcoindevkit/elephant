@@ -156,11 +156,11 @@ impl Component for App {
                         </a>
                         <ul class="nav nav-pills">
                         // TODO: active tab?
-                            <li class="nav-item"><a onclick={onclick(Tabs::KeyManagement)} class="nav-link" aria-current="page">{ "Key Manager" }</a></li>
-                            <li class="nav-item"><a onclick={onclick(Tabs::Home)} class={classes!("nav-link", disabled_link)}>{ "Wallet home" }</a></li>
+                            <li class="nav-item"><a onclick={onclick(Tabs::KeyManagement)} class="nav-link" aria-current="page">{ "Wallet creator" }</a></li>
+                            <li class="nav-item"><a onclick={onclick(Tabs::Home)} class={classes!("nav-link", disabled_link)}>{ "Home" }</a></li>
                             <li class="nav-item"><a onclick={onclick(Tabs::CreateTx)} class={classes!("nav-link", disabled_link)}>{ "Create transaction" }</a></li>
                             <li class="nav-item"><a onclick={onclick(Tabs::SignTx)} class={classes!("nav-link", disabled_link)}>{ "Sign transaction" }</a></li>
-                            <li class="nav-item"><a onclick={onclick(Tabs::Merge)} class="nav-link">{ "Merge and broadcast" }</a></li>
+                            <li class="nav-item"><a onclick={onclick(Tabs::Merge)} class={classes!("nav-link", disabled_link)}>{ "Merge and broadcast" }</a></li>
                         </ul>
                         <button type="button" class="btn btn-primary" onclick={onclick_load} {disabled}>{if self.is_loading { "Loading..." } else { "Sync wallet" }}</button>
                     </header>

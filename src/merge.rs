@@ -114,7 +114,7 @@ impl Component for Merge {
                 <div>
                     <button class="btn btn-primary daniela-button" onclick={add_psbt} disabled={ add_psbt_disabled }>{ "Add PSBT" }</button>
                 </div>
-                <textarea class={classes!("form-control","daniela-textarea",is_invalid)} id="merged-psbt-textarea" rows="10" disabled=true value={merged_psbt}></textarea>
+                <textarea class={classes!("form-control","daniela-textarea",is_invalid)} id="merged-psbt-textarea" rows="10" readonly=true value={merged_psbt}></textarea>
                 <div class="invalid-feedback">
                 { format!("Error merging PSBTs: {}", merge_error) }
                 </div>

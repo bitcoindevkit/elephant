@@ -29,5 +29,3 @@ jobs:
         version: 'latest'
     - name: Build
       run: trunk build
-    - name: Run tests
-      run: cargo test --verbose

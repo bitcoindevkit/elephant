@@ -54,7 +54,7 @@ impl Component for Sign {
                 { "Please enter a valid PSBT" }
                 </div>
                 <button class="btn btn-primary" {onclick} disabled={ button_disabled }>{ "Sign" }</button>
-                <textarea class="form-control daniela-textarea" id="signed-psbt-textarea" rows="10" disabled=true value={self.signed_psbt.as_ref().map(|s| s.to_string())}></textarea>
+                <textarea class="form-control daniela-textarea" id="signed-psbt-textarea" rows="10" readonly=true value={self.signed_psbt.as_ref().map(|s| s.to_string())}></textarea>
             </div>
         }
     }
