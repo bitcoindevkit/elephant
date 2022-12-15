@@ -44,7 +44,7 @@ fn parse_policy(policy: &str) -> Result<AppWallet, Box<dyn std::error::Error>> {
             policy
         ),
         None,
-        bitcoin::Network::Regtest,
+        bitcoin::Network::Testnet,
     )?)
 }
 

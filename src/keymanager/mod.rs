@@ -88,7 +88,7 @@ impl State {
         let hash = bdk::bitcoin::hashes::sha256::Hash::hash(alias.as_bytes());
         let sk = PrivateKey {
             compressed: true,
-            network: Network::Regtest,
+            network: Network::Testnet,
             inner: SecretKey::from_slice(&hash).expect("32 bytes, within curve order"),
         };
 
@@ -101,7 +101,7 @@ impl State {
         let hash = bdk::bitcoin::hashes::sha256::Hash::hash(alias.as_bytes());
         let sk = PrivateKey {
             compressed: true,
-            network: Network::Regtest,
+            network: Network::Testnet,
             inner: SecretKey::from_slice(&hash).expect("32 bytes, within curve order"),
         };
 

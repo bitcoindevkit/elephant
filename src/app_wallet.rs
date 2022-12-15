@@ -26,7 +26,7 @@ impl AppWallet {
             network,
             MemoryDatabase::new(),
         )?;
-        let esplora = EsploraBlockchain::new(RAJ_URL, 20);
+        let esplora = EsploraBlockchain::new(BLOCKSTREAM_URL, 20);
         Ok(Self(Rc::new(RefCell::new((wallet, esplora)))))
     }
 
