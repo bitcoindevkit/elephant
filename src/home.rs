@@ -86,23 +86,6 @@ impl Component for Home {
         }
     }
 
-    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
-        if first_render {
-            let wallet_cloned = self.props.wallet.0.clone();
-            ctx.link().send_future(async move {
-                let res = wallet_cloned
-                    .borrow()
-                    .0
-                    .sync(
-                        &wallet_cloned.borrow().1,
-                        bdk::wallet::SyncOptions::default(),
-                    )
-                    .await;
-                Msg::ReloadFinished(res)
-            });
-        }
-    }
-
     fn changed(&mut self, ctx: &Context<Self>) -> bool {
         if &self.props != ctx.props() {
             self.props = ctx.props().clone();
