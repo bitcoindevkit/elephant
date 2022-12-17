@@ -1,6 +1,6 @@
 use crate::AppWallet;
-use bdk::{Balance, bitcoin};
 use bdk::miniscript::policy::Concrete;
+use bdk::{bitcoin, Balance};
 use std::str::FromStr;
 use yew::functional::*;
 use yew::prelude::*;
@@ -117,11 +117,25 @@ impl Component for App {
                     Msg::ReloadFinished
                 });
                 true
-            },
+            }
             Msg::ReloadFinished => {
                 self.is_loading = false;
-                self.balance = self.wallet.as_ref().unwrap().borrow().0.get_balance().unwrap();
-                let mut temp_tx = self.wallet.as_ref().unwrap().borrow().0.list_transactions(false).unwrap();
+                self.balance = self
+                    .wallet
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .0
+                    .get_balance()
+                    .unwrap();
+                let mut temp_tx = self
+                    .wallet
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .0
+                    .list_transactions(false)
+                    .unwrap();
                 temp_tx.sort_by(|a, b| {
                     b.confirmation_time
                         .as_ref()
