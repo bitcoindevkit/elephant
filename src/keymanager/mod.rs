@@ -55,7 +55,7 @@ impl Keymanager {
         if let Some((_, alias)) = &state.local_key {
             html! {
                 <div class="row">
-                    <input type="text" disabled=true value={alias.to_string()} />
+                    <input type="text" disabled=true value={alias.to_string()} class="form-control col-10" />
                 </div>
             }
         } else {
@@ -64,10 +64,10 @@ impl Keymanager {
                 .callback(move |e: InputEvent| KeymanagerMsg::LocalKeyInputChanged(e));
             let onclick_add = ctx.link().callback(|_| KeymanagerMsg::SetLocalKey);
             html! {
-                <div class="row input-grup has-validation">
-                    <input type={"text"} oninput={oninput_name} placeholder={"Name"} value={self.local_key_input.clone()} class="col-10" />
+                <div class="row input-group has-validation">
+                    <input type={"text"} oninput={oninput_name} placeholder={"Name"} value={self.local_key_input.clone()} class="form-control col-10" />
                     <button type={"button"} class="btn btn-primary col-2" onclick={onclick_add} disabled={self.local_key_input.is_empty()}>
-                      <i class="ms-2 bi bi-plus-square"></i>
+                      <i class="bi bi-plus-square"></i>
                     </button>
                 </div>
             }
@@ -115,7 +115,7 @@ impl State {
             local_key: None,
             map: HashMap::new(),
         };
-        state.add_alias("example_key".to_string());
+        state.add_alias("Alice".to_string());
 
         state
     }
@@ -186,8 +186,8 @@ impl Component for Keymanager {
                                 let remove_onclick = ctx.link().callback_once(move |_| KeymanagerMsg::RemoveKey(name_cloned));
                                 // let key = key.public_key(&bdk::bitcoin::secp256k1::Secp256k1::new());
                                 html! {
-                                    <div class="row mb-1">
-                                        <span class="col-10">{ name.clone() }</span>
+                                    <div class="input-group row mb-1">
+                                        <input type={"text"} disabled=true value={name.clone()} class="form-control col-10" />
                                         // <span class="col-7">{ key.clone() }</span>
                                         <button type="button" onclick={remove_onclick} disabled={self.state.borrow().map.len() == 1} class="col-2 btn btn-primary"><i class="bi bi-trash"></i></button>
                                     </div>
@@ -195,10 +195,10 @@ impl Component for Keymanager {
                             })
                         }
                         </div>
-                        <div class="row input-grup has-validation">
-                            <input type={"text"} oninput={oninput_name} placeholder={"Name"} value={self.new_input_name.clone()} class="col-10" />
+                        <div class="row input-group has-validation">
+                            <input type={"text"} oninput={oninput_name} placeholder={"Name"} value={self.new_input_name.clone()} class="col-10 form-control" />
                             <button type={"button"} class="btn btn-primary col-2" onclick={onclick_add} disabled={self.new_input_name.is_empty()}>
-                              <i class="ms-2 bi bi-plus-square"></i>
+                              <i class="bi bi-check-lg"></i>
                             </button>
                         </div>
                     </div>
