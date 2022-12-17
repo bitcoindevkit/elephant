@@ -18,6 +18,7 @@
     width: 70% !important;
     white-space: nowrap;
     margin: auto;
+    font-family: 'Roboto Mono', monospace;
 }
 
 .daniela-table-align-right {
@@ -29,6 +30,7 @@
     flex-direction: column;
     justify-content: center;
     height: 70vh;
+    font-family: 'Roboto Mono', monospace;
 }
 
 .balance-wrapper {
