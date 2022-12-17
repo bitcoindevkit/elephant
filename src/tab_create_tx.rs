@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use bdk::{
     bitcoin::{psbt::Psbt, Address},
+    descriptor::policy::SatisfiableItem,
     FeeRate, KeychainKind, TransactionDetails,
 };
 use web_sys::HtmlInputElement;
@@ -89,11 +90,21 @@ impl Component for TabCreateTx {
         let (wallet, _) = &*props.wallet.borrow();
 
         let policy = wallet.policies(KeychainKind::External).unwrap().unwrap();
+        let policy = match policy.item {
+            SatisfiableItem::Thresh { items, threshold } => {
+                assert_eq!(threshold, 1);
+                assert_eq!(items.len(), 2);
+                items[1].clone()
+            }
+            _ => panic!(""),
+        };
         let policy_selection = self.policy_selection.clone();
 
         let onclick_create_button = ctx.link().callback(|_| CreateTxMsg::CreateButtonClicked);
         let oninput_address = ctx.link().callback(|e| CreateTxMsg::AddressInputEvent(e));
         let oninput_amount = ctx.link().callback(|e| CreateTxMsg::AmountInputEvent(e));
+
+        let disabled_create_button = self.addr == "" || self.amount == 0;
 
         let result_html = match &self.psbt_result {
             Some(Ok((psbt, details))) => html! {
@@ -106,9 +117,7 @@ impl Component for TabCreateTx {
             Some(Err(err)) => html! {
                 <label>{ format!("Failed to create PSBT: {}", err.to_string()) }</label>
             },
-            None => html! {
-                <label>{ "Nothing created yet!" }</label>
-            },
+            None => html! {},
         };
 
         html! {
@@ -121,7 +130,7 @@ impl Component for TabCreateTx {
                 <br/>
                 <PolicyView selection={policy_selection} node={policy}/>
                 <br/>
-                <button class="btn btn-primary" onclick={onclick_create_button}> { "Create" } </button>
+                <button class="btn btn-primary" disabled={disabled_create_button} onclick={onclick_create_button}> { "Create" } </button>
                 <br/>
                 { result_html }
             </div>
