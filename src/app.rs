@@ -175,8 +175,8 @@ impl Component for App {
                             <li class="nav-item"><a onclick={onclick(Tabs::CreateTx)} class={classes!("nav-link", disabled_link)}>{ "Create transaction" }</a></li>
                             <li class="nav-item"><a onclick={onclick(Tabs::SignTx)} class={classes!("nav-link", disabled_link)}>{ "Sign transaction" }</a></li>
                             <li class="nav-item"><a onclick={onclick(Tabs::Merge)} class={classes!("nav-link", disabled_link)}>{ "Merge and broadcast" }</a></li>
+                            <button type="button" class="btn btn-primary" onclick={onclick_load} {disabled}>{if self.is_loading { "Loading..." } else { "Sync wallet" }}</button>
                         </ul>
-                        <button type="button" class="btn btn-primary" onclick={onclick_load} {disabled}>{if self.is_loading { "Loading..." } else { "Sync wallet" }}</button>
                     </header>
                 </div>
                 { self.create_tab() }
