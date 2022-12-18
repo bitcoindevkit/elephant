@@ -3,7 +3,8 @@
 }
 
 .daniela {
-    margin: 0px 100px 0px 100px;
+    margin: 0px auto;
+    width: 70%;
 }
 
 .daniela-textarea {
