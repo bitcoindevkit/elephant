@@ -30,7 +30,7 @@ pub enum KeymanagerMsg {
     LocalKeyInputChanged(InputEvent),
     SetLocalKey,
 
-    RemoveKey(String),
+    RemoveKey(usize),
 
     Compiled(String),
 }
@@ -46,31 +46,45 @@ pub struct Keymanager {
 
     dispatcher: Dispatcher<EventBus>,
     workspace: Option<Workspace>,
+
+    is_editing: bool,
 }
 
 impl Keymanager {
     fn local_key(&self, ctx: &Context<Self>) -> Html {
         let state = self.state.borrow();
 
-        if let Some((_, alias)) = &state.local_key {
+        let icon = if self.is_editing {
             html! {
-                <div class="row">
-                    <input type="text" disabled=true value={alias.to_string()} class="form-control col-10" />
-                </div>
+                <i class="bi bi-check-lg"></i>
             }
         } else {
-            let oninput_name = ctx
-                .link()
-                .callback(move |e: InputEvent| KeymanagerMsg::LocalKeyInputChanged(e));
-            let onclick_add = ctx.link().callback(|_| KeymanagerMsg::SetLocalKey);
             html! {
-                <div class="row input-group has-validation">
-                    <input type={"text"} oninput={oninput_name} placeholder={"Name"} value={self.local_key_input.clone()} class="form-control col-10" />
-                    <button type={"button"} class="btn btn-primary col-2" onclick={onclick_add} disabled={self.local_key_input.is_empty()}>
-                      <i class="bi bi-plus-square"></i>
-                    </button>
-                </div>
+                <i class="bi bi-pencil-square"></i>
             }
+        };
+
+        let value = if self.is_editing {
+            self.local_key_input.clone()
+        } else {
+            state
+                .local_key
+                .as_ref()
+                .map(|k| k.1.clone())
+                .unwrap_or("".to_string())
+        };
+
+        let oninput_name = ctx
+            .link()
+            .callback(move |e: InputEvent| KeymanagerMsg::LocalKeyInputChanged(e));
+        let onclick_add = ctx.link().callback(|_| KeymanagerMsg::SetLocalKey);
+        html! {
+            <div class="row input-group has-validation">
+                <input type={"text"} oninput={oninput_name} {value} disabled={!self.is_editing} class="form-control col-10" />
+                <button type={"button"} class="btn btn-primary col-2" onclick={onclick_add} disabled={self.is_editing && self.local_key_input.is_empty()}>
+                { icon }
+                </button>
+            </div>
         }
     }
 }
@@ -78,7 +92,8 @@ impl Keymanager {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct State {
     local_key: Option<(PrivateKey, String)>,
-    map: HashMap<String, PrivateKey>,
+    keys: Vec<(String, PrivateKey)>,
+    remote_keys_serial: usize,
 }
 
 impl State {
@@ -92,7 +107,7 @@ impl State {
             inner: SecretKey::from_slice(&hash).expect("32 bytes, within curve order"),
         };
 
-        self.map.insert(alias, sk);
+        self.keys.push((alias, sk));
     }
 
     pub fn set_local(&mut self, alias: String) {
@@ -113,7 +128,8 @@ impl State {
     fn new() -> Self {
         let mut state = State {
             local_key: None,
-            map: HashMap::new(),
+            keys: Vec::new(),
+            remote_keys_serial: 0,
         };
         state.add_alias("Alice".to_string());
 
@@ -136,7 +152,7 @@ impl Component for Keymanager {
         let dropdown_cb = Closure::new(move || {
             let state_cloned = state_cloned.borrow();
             let dropdown = state_cloned
-                .map
+                .keys
                 .iter()
                 .map(|(k, v)| {
                     let key = v.public_key(&bdk::bitcoin::secp256k1::Secp256k1::new());
@@ -158,6 +174,8 @@ impl Component for Keymanager {
 
             dispatcher: EventBus::dispatcher(),
             workspace: None,
+
+            is_editing: false,
         }
     }
 
@@ -181,15 +199,15 @@ impl Component for Keymanager {
 
                         <div style="margin-top: 20px">
                         <h2>{ "Remote Keys" }</h2>
-                        { for self.state.borrow().map.iter().map(|(name, key)| {
+                        { for self.state.borrow().keys.iter().enumerate().map(|(i, (name, _key))| {
                                 let name_cloned = name.clone();
-                                let remove_onclick = ctx.link().callback_once(move |_| KeymanagerMsg::RemoveKey(name_cloned));
+                                let remove_onclick = ctx.link().callback_once(move |_| KeymanagerMsg::RemoveKey(i));
                                 // let key = key.public_key(&bdk::bitcoin::secp256k1::Secp256k1::new());
                                 html! {
                                     <div class="input-group row mb-1">
                                         <input type={"text"} disabled=true value={name.clone()} class="form-control col-10" />
                                         // <span class="col-7">{ key.clone() }</span>
-                                        <button type="button" onclick={remove_onclick} disabled={self.state.borrow().map.len() == 1} class="col-2 btn btn-primary"><i class="bi bi-trash"></i></button>
+                                        <button type="button" onclick={remove_onclick} disabled={self.state.borrow().keys.len() == 1} class="col-2 btn btn-primary"><i class="bi bi-trash"></i></button>
                                     </div>
                                 }
                             })
@@ -410,17 +428,30 @@ impl Component for Keymanager {
                 true
             }
             KeymanagerMsg::SetLocalKey => {
-                self.state
-                    .borrow_mut()
-                    .set_local(self.local_key_input.clone());
-                self.local_key_input = String::new();
+                if self.is_editing {
+                    self.state
+                        .borrow_mut()
+                        .set_local(self.local_key_input.clone());
+                    self.local_key_input = String::new();
 
-                storage::save(&self.state.borrow());
+                    storage::save(&self.state.borrow());
+
+                    self.is_editing = false;
+                } else {
+                    self.local_key_input = self
+                        .state
+                        .borrow()
+                        .local_key
+                        .as_ref()
+                        .map(|k| k.1.clone())
+                        .unwrap_or("".to_string());
+                    self.is_editing = true;
+                }
 
                 true
             }
-            KeymanagerMsg::RemoveKey(key) => {
-                self.state.borrow_mut().map.remove(&key);
+            KeymanagerMsg::RemoveKey(i) => {
+                self.state.borrow_mut().keys.remove(i);
                 storage::save(&self.state.borrow());
 
                 true
