@@ -157,8 +157,8 @@ impl BlocklyBlockArg {
     }
 }
 
-#[serde(rename_all = "camelCase")]
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct BlocklyBlock {
     #[serde(rename = "type")]
     pub ty: &'static str,

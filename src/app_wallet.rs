@@ -8,8 +8,7 @@ use bdk::{
     descriptor::IntoWalletDescriptor,
 };
 
-const BLOCKSTREAM_URL: &'static str = "https://blockstream.info/testnet/api";
-const RAJ_URL: &'static str = "http://192.168.1.190:3002";
+const BLOCKSTREAM_URL: &str = "https://blockstream.info/testnet/api";
 
 #[derive(Clone)]
 pub struct AppWallet(pub Rc<RefCell<(bdk::Wallet<MemoryDatabase>, EsploraBlockchain)>>);

@@ -1,14 +1,11 @@
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::rc::Rc;
-use std::str::FromStr;
 
-use bdk::bitcoin::secp256k1::{rand, SecretKey};
-use bdk::bitcoin::{Network, PrivateKey, PublicKey};
+use bdk::bitcoin::secp256k1::SecretKey;
+use bdk::bitcoin::{Network, PrivateKey};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
-use web_sys::{EventTarget, HtmlInputElement};
-use yew::prelude::*;
+use web_sys::HtmlInputElement;
 use yew::prelude::*;
 use yew_agent::{Dispatched, Dispatcher};
 
@@ -200,7 +197,6 @@ impl Component for Keymanager {
                         <div style="margin-top: 20px">
                         <h2>{ "Remote Keys" }</h2>
                         { for self.state.borrow().keys.iter().enumerate().map(|(i, (name, _key))| {
-                                let name_cloned = name.clone();
                                 let remove_onclick = ctx.link().callback_once(move |_| KeymanagerMsg::RemoveKey(i));
                                 // let key = key.public_key(&bdk::bitcoin::secp256k1::Secp256k1::new());
                                 html! {

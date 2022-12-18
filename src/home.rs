@@ -1,13 +1,8 @@
 use crate::AppWallet;
-use bdk::bitcoin::util::psbt::PartiallySignedTransaction;
-use bdk::bitcoin::*;
 use bdk::wallet::AddressIndex;
-use bdk::*;
 use yew::prelude::*;
 
 pub enum Msg {
-    ReloadTriggered,
-    ReloadFinished(Result<(), bdk::Error>),
 }
 
 #[derive(Properties, PartialEq, Clone)]
@@ -20,7 +15,6 @@ pub struct Props {
 pub struct Home {
     props: Props,
     address: String,
-    is_loading: bool,
 }
 
 impl Home {}
@@ -41,11 +35,10 @@ impl Component for Home {
         Self {
             props,
             address,
-            is_loading: false,
         }
     }
 
-    fn view(&self, ctx: &Context<Self>) -> Html {
+    fn view(&self, _ctx: &Context<Self>) -> Html {
         let satcommify = |mut n: u64| {
             let sats_3 = n % 1000;
             n /= 1000;
@@ -56,7 +49,6 @@ impl Component for Home {
             let btc = n;
             format!("{}.{:02} {:03} {:03}", btc, sats_1, sats_2, sats_3)
         };
-        let disabled = self.is_loading;
         html! {
             <div>
                 <div class="daniela-home text-center">

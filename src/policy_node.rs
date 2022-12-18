@@ -95,7 +95,7 @@ impl Component for PolicyNode {
         // let node_label = format!("{}", props.id(), props.description());
 
         let chooser_html: Html = match &props.node.item {
-            SatisfiableItem::Multisig { keys, threshold } => {
+            SatisfiableItem::Multisig { keys, .. } => {
                 let key_iter = keys.iter().enumerate().map(|(index, key)| -> Html {
                     let selection = props.selection.clone();
                     let parent_id = props.id().to_string();
@@ -104,7 +104,7 @@ impl Component for PolicyNode {
                 });
                 html! { for key_iter }
             }
-            SatisfiableItem::Thresh { items, threshold } => {
+            SatisfiableItem::Thresh { items, .. } => {
                 let item_iter = items.iter().enumerate().map(|(index, node)| -> Html {
                     let selection = props.selection.clone();
 

@@ -2,10 +2,8 @@ use crate::AppWallet;
 use bdk::miniscript::policy::Concrete;
 use bdk::{bitcoin, Balance};
 use std::str::FromStr;
-use yew::functional::*;
 use yew::prelude::*;
 use yew_agent::{Bridge, Bridged};
-use yew_router::prelude::*;
 
 use crate::evt::EventBus;
 
@@ -26,7 +24,7 @@ pub enum Msg {
 }
 
 #[derive(Copy, Clone)]
-enum Tabs {
+pub enum Tabs {
     Home,
     KeyManagement,
     CreateTx,
@@ -106,7 +104,7 @@ impl Component for App {
                 self.is_loading = true;
                 let wallet_cloned = self.wallet.as_ref().unwrap().0.clone();
                 ctx.link().send_future(async move {
-                    let res = wallet_cloned
+                    let _res = wallet_cloned
                         .borrow()
                         .0
                         .sync(
@@ -156,7 +154,6 @@ impl Component for App {
             Some(_) => None,
             None => Some("disabled"),
         };
-        let link = ctx.link().clone();
         let onclick = move |t: Tabs| ctx.link().callback(move |_| Msg::TabChange(t));
         let onclick_load = ctx.link().callback(move |_| Msg::ReloadTriggered);
         let disabled = self.is_loading || self.wallet.is_none();
