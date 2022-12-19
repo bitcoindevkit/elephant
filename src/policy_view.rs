@@ -9,6 +9,7 @@ pub struct Selection(Rc<RefCell<BTreeMap<String, Vec<usize>>>>);
 
 impl Selection {
     pub fn select(&self, id: String, index: usize) {
+        log::info!("Selected {} {}", id, index);
         let map = &mut *self.0.borrow_mut();
         let selected = map.entry(id).or_default();
         if !selected.contains(&index) {

@@ -90,6 +90,7 @@ impl Component for TabCreateTx {
         let (wallet, _) = &*props.wallet.borrow();
 
         let policy = wallet.policies(KeychainKind::External).unwrap().unwrap();
+        let first_id = policy.item.id();
         let policy = match policy.item {
             SatisfiableItem::Thresh { items, threshold } => {
                 assert_eq!(threshold, 1);
@@ -99,6 +100,7 @@ impl Component for TabCreateTx {
             _ => panic!(""),
         };
         let policy_selection = self.policy_selection.clone();
+        policy_selection.select(first_id, 1);
 
         let onclick_create_button = ctx.link().callback(|_| CreateTxMsg::CreateButtonClicked);
         let oninput_address = ctx.link().callback(|e| CreateTxMsg::AddressInputEvent(e));
