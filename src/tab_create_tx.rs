@@ -72,7 +72,7 @@ impl Component for TabCreateTx {
             }
             CreateTxMsg::AddressInputEvent(e) => {
                 self.addr = e.target_unchecked_into::<HtmlInputElement>().value();
-                false
+                true
             }
             CreateTxMsg::AmountInputEvent(e) => {
                 self.amount = e
@@ -80,7 +80,7 @@ impl Component for TabCreateTx {
                     .value()
                     .parse::<u64>()
                     .unwrap_or_default();
-                false
+                true
             }
         }
     }
