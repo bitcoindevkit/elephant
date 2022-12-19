@@ -169,6 +169,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "90e5c1c8368803113bf0c9584fc495a58b86dc8a29edbf8fe877d21d9507e797"
 
 [[package]]
+name = "elephant"
+version = "0.1.0"
+dependencies = [
+ "bdk",
+ "getrandom",
+ "gloo-storage",
+ "log",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "wasm-bindgen",
+ "wasm-logger",
+ "web-sys",
+ "yew",
+ "yew-agent",
+]
+
+[[package]]
 name = "encoding_rs"
 version = "0.8.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1154,24 +1172,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "24eb03ba0eab1fd845050058ce5e616558e8f8d8fca633e6b163fe25c797213a"
 dependencies = [
  "once_cell",
-]
-
-[[package]]
-name = "trunk-template"
-version = "0.1.0"
-dependencies = [
- "bdk",
- "getrandom",
- "gloo-storage",
- "log",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "wasm-bindgen",
- "wasm-logger",
- "web-sys",
- "yew",
- "yew-agent",
 ]
 
 [[package]]
