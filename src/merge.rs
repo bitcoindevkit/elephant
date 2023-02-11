@@ -176,7 +176,11 @@ impl Component for Merge {
                 true
             }
             Msg::PsbtInputChanged(e) => {
-                let psbt = e.target_unchecked_into::<HtmlInputElement>().value();
+                let psbt = e
+                    .target_unchecked_into::<HtmlInputElement>()
+                    .value()
+                    .trim()
+                    .to_string();
                 self.psbt_input_text = psbt.clone();
                 log::info!("Psbt changed! {:?}", &psbt);
                 if &psbt == "" {
